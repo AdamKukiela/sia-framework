@@ -142,13 +142,66 @@ if [[ -c /dev/tty ]]; then
   echo "Selected options: ${p_choices[*]}"
   echo ""
 
+  # Detect project commands automatically from package.json
+  detected_test_cmd="npm test"
+  detected_lint_cmd="npx eslint --format compact"
+  
+  if [[ -f "package.json" ]]; then
+    detection=$(python3 -c '
+import json, os
+try:
+    with open("package.json") as f:
+        pkg = json.load(f)
+    scripts = pkg.get("scripts", {})
+    deps = pkg.get("dependencies", {})
+    dev_deps = pkg.get("devDependencies", {})
+    
+    # Check test command
+    test_cmd = "npm test"
+    if "test" in scripts:
+        if os.path.exists("yarn.lock"):
+            test_cmd = "yarn test"
+        elif os.path.exists("pnpm-lock.yaml"):
+            test_cmd = "pnpm test"
+        elif os.path.exists("bun.lockb") or os.path.exists("bun.lock"):
+            test_cmd = "bun test"
+        else:
+            test_cmd = "npm run test"
+    elif "jest" in dev_deps or "jest" in deps:
+        test_cmd = "npx jest"
+    elif "vitest" in dev_deps or "vitest" in deps:
+        test_cmd = "npx vitest run"
+        
+    # Check lint command
+    lint_cmd = "npx eslint --format compact"
+    if "lint" in scripts:
+        if os.path.exists("yarn.lock"):
+            lint_cmd = "yarn lint"
+        elif os.path.exists("pnpm-lock.yaml"):
+            lint_cmd = "pnpm lint"
+        elif os.path.exists("bun.lockb") or os.path.exists("bun.lock"):
+            lint_cmd = "bun run lint"
+        else:
+            lint_cmd = "npm run lint"
+    elif "@biomejs/biome" in dev_deps or "@biomejs/biome" in deps:
+        lint_cmd = "npx @biomejs/biome check"
+        
+    print(f"{test_cmd}|{lint_cmd}")
+except Exception:
+    print("npm test|npx eslint --format compact")
+' 2>/dev/null || echo "npm test|npx eslint --format compact")
+    
+    detected_test_cmd=$(echo "$detection" | cut -d'|' -f1)
+    detected_lint_cmd=$(echo "$detection" | cut -d'|' -f2)
+  fi
+
   # Commands selection
   echo ">> 4. Project Commands"
-  read -rp "Enter your project's unit testing command [default: npm test]: " test_cmd
-  test_cmd="${test_cmd:-npm test}"
+  read -rp "Enter your project's unit testing command [default: ${detected_test_cmd}]: " test_cmd
+  test_cmd="${test_cmd:-$detected_test_cmd}"
 
-  read -rp "Enter your project's linter command [default: npx eslint --format compact]: " lint_cmd
-  lint_cmd="${lint_cmd:-npx eslint --format compact}"
+  read -rp "Enter your project's linter command [default: ${detected_lint_cmd}]: " lint_cmd
+  lint_cmd="${lint_cmd:-$detected_lint_cmd}"
   echo ""
 
   # Generate sia.json dynamically with selected providers
