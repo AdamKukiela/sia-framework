@@ -356,9 +356,7 @@ data["roles"]["review"] = default_architect
 
 with open("sia.json", "w") as f:
     json.dump(data, f, indent=2)
-' "$brain_dir" "$worker_dir" \
-  "${p_choices[0]}" "${p_choices[1]}" "${p_choices[2]}" "${p_choices[3]}" "${p_choices[4]}" \
-  "$test_cmd" "$lint_cmd" "$brain_dir" "$worker_dir"
+' "$brain_dir" "$worker_dir" "${p_choices[0]}" "${p_choices[1]}" "${p_choices[2]}" "${p_choices[3]}" "${p_choices[4]}" "$test_cmd" "$lint_cmd" "$brain_dir" "$worker_dir"
 
 else
   # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
