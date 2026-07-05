@@ -9,24 +9,24 @@ BASE_URL="${SIA_REPO_URL:-https://raw.githubusercontent.com/AdamKukiela/sia-fram
 
 # 1. Download all required scripts and templates first
 declare -a FILES=(
-  "AGENTS.md"
-  "scripts/sia-gate.sh"
-  "scripts/sia-worker.sh"
-  "scripts/sia-run.sh"
-  "scripts/lib/common.sh"
-  "scripts/lib/context.sh"
-  "scripts/lib/run_cmd.py"
-  "scripts/lib/sia_apply.py"
-  "scripts/lib/context_builder.py"
-  "scripts/lib/providers/ollama.sh"
-  "scripts/lib/providers/anthropic.sh"
-  "scripts/lib/providers/openai.sh"
-  "scripts/lib/providers/cli.sh"
-  "scripts/lib/providers/mock.sh"
-  "templates/sia.json"
-  "templates/TASK_TEMPLATE.md"
-  "templates/sia.sb"
-  "tests/run_tests.sh"
+  ".sia/AGENTS.md"
+  ".sia/scripts/sia-gate.sh"
+  ".sia/scripts/sia-worker.sh"
+  ".sia/scripts/sia-run.sh"
+  ".sia/scripts/lib/common.sh"
+  ".sia/scripts/lib/context.sh"
+  ".sia/scripts/lib/run_cmd.py"
+  ".sia/scripts/lib/sia_apply.py"
+  ".sia/scripts/lib/context_builder.py"
+  ".sia/scripts/lib/providers/ollama.sh"
+  ".sia/scripts/lib/providers/anthropic.sh"
+  ".sia/scripts/lib/providers/openai.sh"
+  ".sia/scripts/lib/providers/cli.sh"
+  ".sia/scripts/lib/providers/mock.sh"
+  ".sia/templates/sia.json"
+  ".sia/templates/TASK_TEMPLATE.md"
+  ".sia/templates/sia.sb"
+  ".sia/tests/run_tests.sh"
 )
 
 # Temporary directory creation for setup inside .sia/
@@ -36,7 +36,7 @@ for file in "${FILES[@]}"; do
   url="${BASE_URL}/${file}"
   echo "Downloading ${file}..."
   set +e
-  curl -fsS "$url" -o ".sia/${file}"
+  curl -fsS "$url" -o "$file"
   rc=$?
   set -e
   if [[ $rc -ne 0 ]]; then
