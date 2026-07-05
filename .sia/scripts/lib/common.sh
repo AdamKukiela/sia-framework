@@ -16,10 +16,14 @@ sia_err() {
 
 # 1. Load config helper using inline python for robust parsing and compatibility
 sia_load_config() {
-  local config_file="${PROJECT_ROOT}/sia.json"
+  local config_file="${PROJECT_ROOT}/.sia/sia.json"
   if [[ ! -f "$config_file" ]]; then
-    echo "ERROR: Configuration file sia.json not found in project root!" >&2
-    exit 2
+    config_file="${PROJECT_ROOT}/sia.json"
+  fi
+  
+  if [[ ! -f "$config_file" ]]; then
+    echo "ERROR: Configuration file sia.json not found in .sia/ or project root!" >&2
+    exit 3
   fi
   
   # Use heredoc to pass python code cleanly without shell expansion/parenthesis bugs

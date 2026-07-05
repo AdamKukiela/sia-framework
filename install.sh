@@ -7,6 +7,9 @@ echo ""
 # Base repository URL (configurable, defaults to company organization)
 BASE_URL="${SIA_REPO_URL:-https://raw.githubusercontent.com/AdamKukiela/sia-framework/main}"
 
+# Create framework root directory early
+mkdir -p .sia
+
 # Helper function for interactive multi-select checkbox menu in Bash
 prompt_checklist() {
   local title="$1"
@@ -353,13 +356,13 @@ data["roles"]["worker"] = default_worker
 data["roles"]["architect"] = default_architect
 data["roles"]["review"] = default_architect
 
-with open("sia.json", "w") as f:
+with open(".sia/sia.json", "w") as f:
     json.dump(data, f, indent=2)
 ' "$brain_dir" "$worker_dir" "${p_choices[0]}" "${p_choices[1]}" "${p_choices[2]}" "${p_choices[3]}" "${p_choices[4]}" "$test_cmd" "$lint_cmd" "$brain_dir" "$worker_dir"
 
 else
   # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
-  sia_json="sia.json"
+  sia_json=".sia/sia.json"
   if [[ ! -f "$sia_json" ]]; then
     cp_default_sia=1
   fi
@@ -416,18 +419,18 @@ if [[ $interactive -eq 1 ]]; then
 
   echo ""
   echo "=== SIA Framework Initialized Successfully ==="
-  echo "1. Verify sia.json in your project root."
+  echo "1. Verify sia.json in .sia/sia.json."
   echo "2. Make sure your environment variables / subscriptions are set up."
   echo "3. Add your first task contract in ${tasks_dir}/TASK-001.md."
   echo "4. Run the orchestrator loop: ./.sia/scripts/sia-run.sh TASK-001"
 else
   # Non-interactive setup completion
   if [[ "${cp_default_sia:-0}" -eq 1 ]]; then
-    cp .sia/templates/sia.json "sia.json"
+    cp .sia/templates/sia.json ".sia/sia.json"
   fi
   mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations
   cp .sia/templates/TASK_TEMPLATE.md .brain/tasks/TASK_TEMPLATE.md
   
   echo "=== SIA Framework Initialized Successfully (Non-Interactive) ==="
-  echo "Standard folders (.brain, .worker) created. Configuration copied to sia.json."
+  echo "Standard folders (.brain, .worker) created. Configuration copied to .sia/sia.json."
 fi
