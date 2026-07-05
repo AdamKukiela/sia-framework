@@ -7,54 +7,12 @@ echo ""
 # Base repository URL (configurable, defaults to company organization)
 BASE_URL="${SIA_REPO_URL:-https://raw.githubusercontent.com/AdamKukiela/sia-framework/main}"
 
-# 1. Download all required scripts and templates first
-declare -a FILES=(
-  ".sia/AGENTS.md"
-  ".sia/scripts/sia-gate.sh"
-  ".sia/scripts/sia-worker.sh"
-  ".sia/scripts/sia-run.sh"
-  ".sia/scripts/lib/common.sh"
-  ".sia/scripts/lib/context.sh"
-  ".sia/scripts/lib/run_cmd.py"
-  ".sia/scripts/lib/sia_apply.py"
-  ".sia/scripts/lib/context_builder.py"
-  ".sia/scripts/lib/providers/ollama.sh"
-  ".sia/scripts/lib/providers/anthropic.sh"
-  ".sia/scripts/lib/providers/openai.sh"
-  ".sia/scripts/lib/providers/cli.sh"
-  ".sia/scripts/lib/providers/mock.sh"
-  ".sia/templates/sia.json"
-  ".sia/templates/TASK_TEMPLATE.md"
-  ".sia/templates/sia.sb"
-  ".sia/tests/run_tests.sh"
-)
-
-# Temporary directory creation for setup inside .sia/
-mkdir -p .sia/scripts/lib/providers .sia/templates .sia/tests
-
-for file in "${FILES[@]}"; do
-  url="${BASE_URL}/${file}"
-  echo "Downloading ${file}..."
-  set +e
-  curl -fsS "$url" -o "$file"
-  rc=$?
-  set -e
-  if [[ $rc -ne 0 ]]; then
-    echo "ERROR: Failed to download ${file} from ${url}" >&2
-    exit 1
-  fi
-done
-
-# Set executable permissions
-chmod +x .sia/scripts/sia-gate.sh .sia/scripts/sia-worker.sh .sia/scripts/sia-run.sh
-chmod +x .sia/scripts/lib/run_cmd.py .sia/scripts/lib/sia_apply.py .sia/tests/run_tests.sh
-
-# 2. Interactive configuration wizard (DX)
-# If a terminal character device is available, attach stdin to TTY (works with curl | bash!)
+# 1. Interactive configuration wizard (DX) or Non-interactive default configuration
+interactive=0
 if [[ -c /dev/tty ]]; then
   exec < /dev/tty
+  interactive=1
 
-  echo ""
   echo "--------------------------------------------------------"
   echo "🤖 Welcome to the SIA Interactive Configuration Wizard!"
   echo "SIA safely delegates coding tasks to AI models."
@@ -211,6 +169,59 @@ with open("sia.json", "w") as f:
     json.dump(data, f, indent=2)
 ' "$brain_dir" "$worker_dir" "$p_provider" "$p_model" "$p_base_url" "$p_api_env" "$test_cmd" "$lint_cmd"
 
+else
+  # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
+  sia_json="sia.json"
+  if [[ ! -f "$sia_json" ]]; then
+    cp_default_sia=1
+  fi
+fi
+
+# 2. Download all required scripts and templates
+declare -a FILES=(
+  ".sia/AGENTS.md"
+  ".sia/scripts/sia-gate.sh"
+  ".sia/scripts/sia-worker.sh"
+  ".sia/scripts/sia-run.sh"
+  ".sia/scripts/lib/common.sh"
+  ".sia/scripts/lib/context.sh"
+  ".sia/scripts/lib/run_cmd.py"
+  ".sia/scripts/lib/sia_apply.py"
+  ".sia/scripts/lib/context_builder.py"
+  ".sia/scripts/lib/providers/ollama.sh"
+  ".sia/scripts/lib/providers/anthropic.sh"
+  ".sia/scripts/lib/providers/openai.sh"
+  ".sia/scripts/lib/providers/cli.sh"
+  ".sia/scripts/lib/providers/mock.sh"
+  ".sia/templates/sia.json"
+  ".sia/templates/TASK_TEMPLATE.md"
+  ".sia/templates/sia.sb"
+  ".sia/tests/run_tests.sh"
+)
+
+echo "Configuration completed. Downloading framework files..."
+# Temporary directory creation inside .sia/
+mkdir -p .sia/scripts/lib/providers .sia/templates .sia/tests
+
+for file in "${FILES[@]}"; do
+  url="${BASE_URL}/${file}"
+  echo "Downloading ${file}..."
+  set +e
+  curl -fsS "$url" -o "$file"
+  rc=$?
+  set -e
+  if [[ $rc -ne 0 ]]; then
+    echo "ERROR: Failed to download ${file} from ${url}" >&2
+    exit 1
+  fi
+done
+
+# Set executable permissions
+chmod +x .sia/scripts/sia-gate.sh .sia/scripts/sia-worker.sh .sia/scripts/sia-run.sh
+chmod +x .sia/scripts/lib/run_cmd.py .sia/scripts/lib/sia_apply.py .sia/tests/run_tests.sh
+
+# 3. Post-download setup and success messages
+if [[ $interactive -eq 1 ]]; then
   # Copy TASK_TEMPLATE to custom tasks dir
   cp .sia/templates/TASK_TEMPLATE.md "${tasks_dir}/TASK_TEMPLATE.md"
 
@@ -225,12 +236,10 @@ with open("sia.json", "w") as f:
   fi
   echo "3. Add your first task contract in ${tasks_dir}/TASK-001.md."
   echo "4. Run the orchestrator loop: ./.sia/scripts/sia-run.sh TASK-001"
-
 else
-  # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
-  sia_json="sia.json"
-  if [[ ! -f "$sia_json" ]]; then
-    cp .sia/templates/sia.json "$sia_json"
+  # Non-interactive setup completion
+  if [[ "${cp_default_sia:-0}" -eq 1 ]]; then
+    cp .sia/templates/sia.json "sia.json"
   fi
   mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations
   cp .sia/templates/TASK_TEMPLATE.md .brain/tasks/TASK_TEMPLATE.md
