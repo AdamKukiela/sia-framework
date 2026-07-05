@@ -3,7 +3,7 @@
 
 # Determine directories
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$LIB_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$LIB_DIR/../../.." && pwd)"
 
 # Logger helper
 sia_log() {

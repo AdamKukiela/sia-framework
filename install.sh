@@ -29,14 +29,14 @@ declare -a FILES=(
   "tests/run_tests.sh"
 )
 
-# Temporary directory creation for setup
-mkdir -p scripts/lib/providers templates tests
+# Temporary directory creation for setup inside .sia/
+mkdir -p .sia/scripts/lib/providers .sia/templates .sia/tests
 
 for file in "${FILES[@]}"; do
   url="${BASE_URL}/${file}"
   echo "Downloading ${file}..."
   set +e
-  curl -fsS "$url" -o "$file"
+  curl -fsS "$url" -o ".sia/${file}"
   rc=$?
   set -e
   if [[ $rc -ne 0 ]]; then
@@ -46,12 +46,14 @@ for file in "${FILES[@]}"; do
 done
 
 # Set executable permissions
-chmod +x scripts/sia-gate.sh scripts/sia-worker.sh scripts/sia-run.sh
-chmod +x scripts/lib/run_cmd.py scripts/lib/sia_apply.py tests/run_tests.sh
+chmod +x .sia/scripts/sia-gate.sh .sia/scripts/sia-worker.sh .sia/scripts/sia-run.sh
+chmod +x .sia/scripts/lib/run_cmd.py .sia/scripts/lib/sia_apply.py .sia/tests/run_tests.sh
 
 # 2. Interactive configuration wizard (DX)
-# Checks if stdout and stdin are a terminal (interactive)
-if [[ -t 0 && -t 1 ]]; then
+# If a terminal character device is available, attach stdin to TTY (works with curl | bash!)
+if [[ -c /dev/tty ]]; then
+  exec < /dev/tty
+
   echo ""
   echo "--------------------------------------------------------"
   echo "🤖 Welcome to the SIA Interactive Configuration Wizard!"
@@ -209,7 +211,7 @@ with open("sia.json", "w") as f:
 ' "$brain_dir" "$worker_dir" "$p_provider" "$p_model" "$p_base_url" "$p_api_env" "$test_cmd" "$lint_cmd"
 
   # Copy TASK_TEMPLATE to custom tasks dir
-  cp templates/TASK_TEMPLATE.md "${tasks_dir}/TASK_TEMPLATE.md"
+  cp .sia/templates/TASK_TEMPLATE.md "${tasks_dir}/TASK_TEMPLATE.md"
 
   echo ""
   echo "=== SIA Framework Initialized Successfully ==="
@@ -221,16 +223,16 @@ with open("sia.json", "w") as f:
     echo "2. Make sure your environment variable '${p_api_env}' is set."
   fi
   echo "3. Add your first task contract in ${tasks_dir}/TASK-001.md."
-  echo "4. Run the orchestrator loop: ./scripts/sia-run.sh TASK-001"
+  echo "4. Run the orchestrator loop: ./.sia/scripts/sia-run.sh TASK-001"
 
 else
   # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
   sia_json="sia.json"
   if [[ ! -f "$sia_json" ]]; then
-    cp templates/sia.json "$sia_json"
+    cp .sia/templates/sia.json "$sia_json"
   fi
   mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations
-  cp templates/TASK_TEMPLATE.md .brain/tasks/TASK_TEMPLATE.md
+  cp .sia/templates/TASK_TEMPLATE.md .brain/tasks/TASK_TEMPLATE.md
   
   echo "=== SIA Framework Initialized Successfully (Non-Interactive) ==="
   echo "Standard folders (.brain, .worker) created. Configuration copied to sia.json."

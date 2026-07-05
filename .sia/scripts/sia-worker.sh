@@ -9,7 +9,7 @@ ATTEMPT="${2:-1}"
 ORCHESTRATED="${3:-}" # Or read from SIA_ORCHESTRATED
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Source common and context helpers
 # shellcheck source=scripts/lib/common.sh

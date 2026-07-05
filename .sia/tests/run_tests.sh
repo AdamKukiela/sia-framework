@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FRAMEWORK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FRAMEWORK_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Setup temporary test directory
 TEST_DIR=$(mktemp -d -t sia-test-XXXXXX)
@@ -18,12 +18,12 @@ git config user.name "Test User"
 git config user.email "test@example.com"
 
 # Create directories
-mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations scripts/lib/providers templates src tests
+mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations .sia/scripts/lib/providers templates src tests
 
 # Copy framework files (scripts & lib)
-cp -r "$FRAMEWORK_DIR/scripts/"* "./scripts/"
-chmod +x ./scripts/sia-gate.sh ./scripts/sia-worker.sh ./scripts/sia-run.sh
-chmod +x ./scripts/lib/run_cmd.py ./scripts/lib/sia_apply.py
+cp -r "$FRAMEWORK_DIR/.sia/scripts/"* "./.sia/scripts/"
+chmod +x ./.sia/scripts/sia-gate.sh ./.sia/scripts/sia-worker.sh ./.sia/scripts/sia-run.sh
+chmod +x ./.sia/scripts/lib/run_cmd.py ./.sia/scripts/lib/sia_apply.py
 
 # Create a dummy config (sia.json) using mock provider
 cat <<EOF > sia.json
@@ -100,7 +100,7 @@ echo ""
 echo "--- TEST 1: Out-of-scope modification check ---"
 echo "hack" >> src/math.test.sh # math.test.sh is not in TASK-001 Scope
 set +e
-./scripts/sia-gate.sh TASK-001
+./.sia/scripts/sia-gate.sh TASK-001
 rc=$?
 set -e
 if [[ $rc -ne 2 ]]; then
@@ -117,7 +117,7 @@ echo ""
 echo "--- TEST 2: .brain/ modification guard check ---"
 echo "modification" >> .brain/tasks/TASK-001.md
 set +e
-./scripts/sia-gate.sh TASK-001
+./.sia/scripts/sia-gate.sh TASK-001
 rc=$?
 set -e
 if [[ $rc -ne 2 ]]; then
@@ -138,7 +138,7 @@ add() {
 }
 EOF
 set +e
-./scripts/sia-gate.sh TASK-001
+./.sia/scripts/sia-gate.sh TASK-001
 rc=$?
 set -e
 if [[ $rc -ne 1 ]]; then
@@ -175,7 +175,7 @@ EOF
 
 # Run sia-run.sh
 set +e
-./scripts/sia-run.sh TASK-001
+./.sia/scripts/sia-run.sh TASK-001
 run_rc=$?
 set -e
 
@@ -230,7 +230,7 @@ cat <<EOF > "$SIA_MOCK_DIR/response-1.txt"
 EOF
 
 # Run worker
-./scripts/sia-worker.sh TASK-001 1 --orchestrated
+./.sia/scripts/sia-worker.sh TASK-001 1 --orchestrated
 
 # Verify math.sh contains patch
 if ! grep -q "fast path" src/math.sh; then
