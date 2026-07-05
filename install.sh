@@ -414,8 +414,11 @@ chmod +x .sia/scripts/lib/run_cmd.py .sia/scripts/lib/sia_apply.py .sia/tests/ru
 
 # 3. Post-download setup and success messages
 if [[ $interactive -eq 1 ]]; then
-  # Copy TASK_TEMPLATE to custom tasks dir
+  # Copy TASK_TEMPLATE and pre-initialize TASK-001.md to custom tasks dir
   cp .sia/templates/TASK_TEMPLATE.md "${tasks_dir}/TASK_TEMPLATE.md"
+  if [[ ! -f "${tasks_dir}/TASK-001.md" ]]; then
+    cp .sia/templates/TASK_TEMPLATE.md "${tasks_dir}/TASK-001.md"
+  fi
 
   echo ""
   echo "=== SIA Framework Initialized Successfully ==="
@@ -430,6 +433,9 @@ else
   fi
   mkdir -p .brain/tasks .brain/wiki .worker/runs .worker/escalations
   cp .sia/templates/TASK_TEMPLATE.md .brain/tasks/TASK_TEMPLATE.md
+  if [[ ! -f ".brain/tasks/TASK-001.md" ]]; then
+    cp .sia/templates/TASK_TEMPLATE.md ".brain/tasks/TASK-001.md"
+  fi
   
   echo "=== SIA Framework Initialized Successfully (Non-Interactive) ==="
   echo "Standard folders (.brain, .worker) created. Configuration copied to .sia/sia.json."
