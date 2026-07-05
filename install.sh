@@ -65,6 +65,7 @@ if [[ -c /dev/tty ]]; then
   # Task folder setup
   echo ">> 1. AI Task Contracts Folder"
   echo "Where should we store your AI task contracts (definitions of done, scopes, rules)?"
+  echo "(If you do not have a second-brain/Obsidian vault, press Enter to create a default folder)"
   read -rp "Folder name [default: .sia]: " input_brain
   brain_dir="${input_brain:-.sia}"
   tasks_dir="${brain_dir}/tasks"
