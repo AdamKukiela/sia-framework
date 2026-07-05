@@ -7,6 +7,90 @@ echo ""
 # Base repository URL (configurable, defaults to company organization)
 BASE_URL="${SIA_REPO_URL:-https://raw.githubusercontent.com/AdamKukiela/sia-framework/main}"
 
+# Helper function for interactive multi-select checkbox menu in Bash
+prompt_checklist() {
+  local title="$1"
+  local dest_var="$2"
+  shift 2
+  
+  local options=()
+  local states=()
+  while [[ $# -gt 0 ]]; do
+    options+=("$1")
+    states+=("$2")
+    shift 2
+  done
+  
+  local num_options=${#options[@]}
+  local active=0
+  
+  # Hide cursor
+  tput civis
+  
+  # Helper to print the list
+  print_checklist() {
+    echo -e "\033[1m$title\033[0m"
+    echo "  (Use Up/Down arrows to navigate, Space to select/deselect, Enter to confirm)"
+    echo ""
+    for ((i=0; i<num_options; i++)); do
+      local marker="[ ]"
+      if [[ "${states[i]}" == "true" ]]; then
+        marker="[\033[32m*\033[0m]"
+      fi
+      
+      if [[ $i -eq $active ]]; then
+        echo -e " \033[1;36m>\033[0m $marker ${options[i]}"
+      else
+        echo -e "   $marker ${options[i]}"
+      fi
+    done
+  }
+  
+  # Initial print
+  print_checklist
+  
+  while true; do
+    # Read user input (1 char)
+    read -rsn1 key
+    if [[ "$key" == $'\x1b' ]]; then
+      # Read remaining escape sequence chars with a short timeout to prevent lockups
+      read -rsn2 -t 0.1 key2
+      if [[ "$key2" == "[A" ]]; then # Up arrow
+        ((active--))
+        [[ $active -lt 0 ]] && active=$((num_options - 1))
+      elif [[ "$key2" == "[B" ]]; then # Down arrow
+        ((active++))
+        [[ $active -ge $num_options ]] && active=0
+      fi
+    elif [[ "$key" == "" ]]; then # Enter
+      break
+    elif [[ "$key" == " " ]]; then # Space
+      if [[ "${states[active]}" == "true" ]]; then
+        states[active]="false"
+      else
+        states[active]="true"
+      fi
+    fi
+    
+    # Move cursor back up to redraw the menu cleanly
+    for ((i=0; i<=num_options+2; i++)); do
+      tput cuu1
+      tput el
+    done
+    print_checklist
+  done
+  
+  # Restore cursor
+  tput cnorm
+  
+  # Export results as array string
+  local results=""
+  for ((i=0; i<num_options; i++)); do
+    results+="${states[i]} "
+  done
+  eval "$dest_var=($results)"
+}
+
 # 1. Interactive configuration wizard (DX) or Non-interactive default configuration
 interactive=0
 if [[ -c /dev/tty ]]; then
@@ -45,43 +129,17 @@ if [[ -c /dev/tty ]]; then
   # Create directories
   mkdir -p "$tasks_dir" "$wiki_dir" "$runs_dir" "$escalations_dir"
 
-  # Provider selection
+  # Provider selection via checkbox checklist
   echo ">> 3. Worker Model Provider"
-  echo "Which AI provider will your Worker use?"
-  echo "  1) Ollama (Local, default: qwen2.5-coder:14b) [Recommended]"
-  echo "  2) Anthropic API (Claude 5 Sonnet / Haiku 4.5)"
-  echo "  3) OpenAI API (GPT-5.5-preview / GPT-5.4 mini)"
-  echo "  4) Subscription CLI (claude code / agy / codex / custom)"
-  echo "  5) Google Gemini API (gemini-2.5-flash / gemini-2.5-pro)"
-  read -rp "Choose [1-5, default: 1]: " provider_choice
-  provider_choice="${provider_choice:-1}"
+  declare -a p_choices
+  prompt_checklist "Select which AI providers you have available and want to configure:" p_choices \
+    "Ollama (Local, default: qwen2.5-coder:14b) [Recommended]" "true" \
+    "Anthropic API (Claude 5 Sonnet / Haiku 4.5)" "false" \
+    "OpenAI API (GPT-5.5-preview / GPT-5.4 mini)" "false" \
+    "Subscription CLI (claude code / agy / codex / custom)" "false" \
+    "Google Gemini API (gemini-2.5-flash / gemini-2.5-pro)" "false"
 
-  p_provider=""
-  p_model=""
-  p_base_url=""
-  p_api_env=""
-
-  if [[ "$provider_choice" == "2" ]]; then
-    p_provider="anthropic"
-    p_model="claude-5-sonnet"
-    p_api_env="ANTHROPIC_API_KEY"
-  elif [[ "$provider_choice" == "3" ]]; then
-    p_provider="openai"
-    p_model="gpt-5.5-preview"
-    p_api_env="OPENAI_API_KEY"
-  elif [[ "$provider_choice" == "4" ]]; then
-    p_provider="cli"
-    p_model="claude"
-  elif [[ "$provider_choice" == "5" ]]; then
-    p_provider="google"
-    p_model="gemini-2.5-flash"
-    p_api_env="GEMINI_API_KEY"
-  else
-    p_provider="ollama"
-    p_model="qwen2.5-coder:14b"
-    p_base_url="http://localhost:11434"
-  fi
-  echo "-> Selected Provider: ${p_provider} (${p_model})"
+  echo "Selected options: ${p_choices[*]}"
   echo ""
 
   # Commands selection
@@ -93,37 +151,37 @@ if [[ -c /dev/tty ]]; then
   lint_cmd="${lint_cmd:-npx eslint --format compact}"
   echo ""
 
-  # Generate sia.json
+  # Generate sia.json dynamically with selected providers
   echo "Writing customized sia.json..."
   python3 -c '
 import json, sys
+
+selected_ollama = sys.argv[3] == "true"
+selected_anthropic = sys.argv[4] == "true"
+selected_openai = sys.argv[5] == "true"
+selected_cli = sys.argv[6] == "true"
+selected_google = sys.argv[7] == "true"
+
+test_cmd = sys.argv[8]
+lint_cmd = sys.argv[9]
+brain_dir = sys.argv[10]
+worker_dir = sys.argv[11]
+
+# Base structure
 data = {
   "version": 2,
-  "providers": {
-    "local-worker": {
-      "provider": sys.argv[3],
-      "model": sys.argv[4],
-      "temperature": 0.2
-    },
-    "claude-api": {
-      "provider": "anthropic",
-      "model": "claude-5-sonnet",
-      "max_tokens": 8192,
-      "api_key_env": "ANTHROPIC_API_KEY",
-      "temperature": 0.2
-    }
-  },
+  "providers": {},
   "roles": {
-    "worker": "local-worker",
-    "architect": "claude-api",
-    "review": "claude-api"
+    "worker": "",
+    "architect": "",
+    "review": ""
   },
   "paths": {
-    "brain_dir": sys.argv[1],
-    "tasks_dir": sys.argv[1] + "/tasks",
-    "worker_dir": sys.argv[2],
-    "runs_dir": sys.argv[2] + "/runs",
-    "escalations_dir": sys.argv[2] + "/escalations"
+    "brain_dir": brain_dir,
+    "tasks_dir": brain_dir + "/tasks",
+    "worker_dir": worker_dir,
+    "runs_dir": worker_dir + "/runs",
+    "escalations_dir": worker_dir + "/escalations"
   },
   "run": {
     "max_attempts": 3,
@@ -143,8 +201,8 @@ data = {
     "budget_pct": 80
   },
   "commands": {
-    "test": sys.argv[7],
-    "lint": sys.argv[8],
+    "test": test_cmd,
+    "lint": lint_cmd,
     "format": "npx prettier --write"
   },
   "forbidden_patterns": [
@@ -164,20 +222,90 @@ data = {
     "node_modules",
     "dist",
     ".git",
-    sys.argv[1],
-    sys.argv[2]
+    brain_dir,
+    worker_dir
   ]
 }
 
-# Add URL or API key env if specified
-if sys.argv[5]:
-    data["providers"]["local-worker"]["base_url"] = sys.argv[5]
-if sys.argv[6]:
-    data["providers"]["local-worker"]["api_key_env"] = sys.argv[6]
+# Add selected providers
+default_worker = ""
+default_architect = ""
+
+if selected_ollama:
+    data["providers"]["local-worker"] = {
+        "provider": "ollama",
+        "model": "qwen2.5-coder:14b",
+        "base_url": "http://localhost:11434",
+        "temperature": 0.2
+    }
+    if not default_worker: default_worker = "local-worker"
+
+if selected_anthropic:
+    data["providers"]["claude-api"] = {
+        "provider": "anthropic",
+        "model": "claude-5-sonnet",
+        "max_tokens": 8192,
+        "api_key_env": "ANTHROPIC_API_KEY",
+        "temperature": 0.2
+    }
+    if not default_worker: default_worker = "claude-api"
+    if not default_architect: default_architect = "claude-api"
+
+if selected_openai:
+    data["providers"]["openai-api"] = {
+        "provider": "openai",
+        "model": "gpt-5.5-preview",
+        "max_tokens": 4096,
+        "api_key_env": "OPENAI_API_KEY",
+        "temperature": 0.2
+    }
+    if not default_worker: default_worker = "openai-api"
+    if not default_architect: default_architect = "openai-api"
+
+if selected_cli:
+    data["providers"]["claude-cli"] = {
+        "provider": "cli",
+        "model": "claude"
+    }
+    if not default_worker: default_worker = "claude-cli"
+
+if selected_google:
+    data["providers"]["gemini-api"] = {
+        "provider": "google",
+        "model": "gemini-2.5-flash",
+        "max_tokens": 8192,
+        "api_key_env": "GEMINI_API_KEY",
+        "temperature": 0.2
+    }
+    if not default_worker: default_worker = "gemini-api"
+    if not default_architect: default_architect = "gemini-api"
+
+# Fallback defaults if none selected
+if not default_worker:
+    data["providers"]["local-worker"] = {
+        "provider": "ollama",
+        "model": "qwen2.5-coder:14b",
+        "base_url": "http://localhost:11434",
+        "temperature": 0.2
+    }
+    default_worker = "local-worker"
+
+if not default_architect:
+    if "claude-api" in data["providers"]:
+        default_architect = "claude-api"
+    else:
+        default_architect = default_worker
+
+# Set roles
+data["roles"]["worker"] = default_worker
+data["roles"]["architect"] = default_architect
+data["roles"]["review"] = default_architect
 
 with open("sia.json", "w") as f:
     json.dump(data, f, indent=2)
-' "$brain_dir" "$worker_dir" "$p_provider" "$p_model" "$p_base_url" "$p_api_env" "$test_cmd" "$lint_cmd"
+' "$brain_dir" "$worker_dir" \
+  "${p_choices[0]}" "${p_choices[1]}" "${p_choices[2]}" "${p_choices[3]}" "${p_choices[4]}" \
+  "$test_cmd" "$lint_cmd" "$brain_dir" "$worker_dir"
 
 else
   # Non-interactive mode (e.g. CI or automated scripts) - fallback to silent default setup
@@ -239,12 +367,7 @@ if [[ $interactive -eq 1 ]]; then
   echo ""
   echo "=== SIA Framework Initialized Successfully ==="
   echo "1. Verify sia.json in your project root."
-  if [[ "$p_provider" == "ollama" ]]; then
-    echo "2. Make sure Ollama is running and pull the model:"
-    echo "   ollama pull ${p_model}"
-  else
-    echo "2. Make sure your environment variable '${p_api_env}' is set."
-  fi
+  echo "2. Make sure your environment variables / subscriptions are set up."
   echo "3. Add your first task contract in ${tasks_dir}/TASK-001.md."
   echo "4. Run the orchestrator loop: ./.sia/scripts/sia-run.sh TASK-001"
 else

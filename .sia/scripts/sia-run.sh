@@ -25,6 +25,7 @@ fi
 # Parsowanie argumentów CLI
 CLI_MODE=""
 CLI_MAX_ATTEMPTS=""
+CLI_MODEL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -34,6 +35,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --max-attempts)
       CLI_MAX_ATTEMPTS="$2"
+      shift 2
+      ;;
+    --model)
+      CLI_MODEL="$2"
       shift 2
       ;;
     *)
@@ -46,6 +51,7 @@ done
 # Resolve effective parameters
 export SIA_RUN_MODE="${CLI_MODE:-$SIA_RUN_DEFAULT_MODE}"
 MAX_ATTEMPTS="${CLI_MAX_ATTEMPTS:-$SIA_RUN_MAX_ATTEMPTS}"
+export SIA_MODEL_OVERRIDE="${CLI_MODEL:-}"
 
 # Verify task file existence early (fail fast)
 TASK_FILE="$PROJECT_ROOT/${SIA_PATH_TASKS_DIR}/${TASK}.md"

@@ -134,6 +134,10 @@ sia_get_role_provider_env() {
   local prov_var="SIA_ROLE_${role_upper}"
   local prov_name="${!prov_var:-}"
   
+  if [[ "$role" == "worker" && -n "${SIA_MODEL_OVERRIDE:-}" ]]; then
+    prov_name="$SIA_MODEL_OVERRIDE"
+  fi
+  
   if [[ -z "$prov_name" ]]; then
     # Fallback to default or the first provider if not set
     prov_name="default"
