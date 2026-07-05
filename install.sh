@@ -54,7 +54,7 @@ prompt_checklist() {
     read -rsn1 key
     if [[ "$key" == $'\x1b' ]]; then
       # Read remaining escape sequence chars with a short timeout to prevent lockups
-      read -rsn2 -t 0.1 key2
+      read -rsn2 -t 1 key2
       if [[ "$key2" == "[A" ]]; then # Up arrow
         ((active--))
         [[ $active -lt 0 ]] && active=$((num_options - 1))
