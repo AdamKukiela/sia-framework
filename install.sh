@@ -51,10 +51,10 @@ prompt_checklist() {
   
   while true; do
     # Read user input (1 char)
-    IFS= read -rsn1 key
+    IFS= read -rsn1 key < /dev/tty
     if [[ "$key" == $'\x1b' ]]; then
       # Read remaining escape sequence chars with a short timeout to prevent lockups
-      IFS= read -rsn2 -t 1 key2
+      IFS= read -rsn2 -t 1 key2 < /dev/tty
       if [[ "$key2" == "[A" ]]; then # Up arrow
         ((active--))
         [[ $active -lt 0 ]] && active=$((num_options - 1))
@@ -94,7 +94,6 @@ prompt_checklist() {
 # 1. Interactive configuration wizard (DX) or Non-interactive default configuration
 interactive=0
 if [[ -c /dev/tty ]]; then
-  exec < /dev/tty
   interactive=1
 
   echo "--------------------------------------------------------"
@@ -108,7 +107,7 @@ if [[ -c /dev/tty ]]; then
   echo ">> 1. AI Task Contracts Folder"
   echo "Where should we store your AI task contracts (definitions of done, scopes, rules)?"
   echo "(If you do not have a second-brain/Obsidian vault, press Enter to create a default folder)"
-  read -rp "Folder name [default: .sia]: " input_brain
+  read -rp "Folder name [default: .sia]: " input_brain < /dev/tty
   brain_dir="${input_brain:-.sia}"
   tasks_dir="${brain_dir}/tasks"
   wiki_dir="${brain_dir}/wiki"
@@ -119,7 +118,7 @@ if [[ -c /dev/tty ]]; then
   echo ">> 2. Worker Run logs & Escalations Folder"
   echo "Where should we store worker execution logs, intermediate runs, and escalations?"
   echo "(Recommended: Press Enter to use the default, unless you already have a folder for temporary run logs)"
-  read -rp "Folder name [default: .sia-worker]: " input_worker
+  read -rp "Folder name [default: .sia-worker]: " input_worker < /dev/tty
   worker_dir="${input_worker:-.sia-worker}"
   runs_dir="${worker_dir}/runs"
   escalations_dir="${worker_dir}/escalations"
@@ -197,10 +196,10 @@ except Exception:
 
   # Commands selection
   echo ">> 4. Project Commands"
-  read -rp "Enter your project's unit testing command [default: ${detected_test_cmd}]: " test_cmd
+  read -rp "Enter your project's unit testing command [default: ${detected_test_cmd}]: " test_cmd < /dev/tty
   test_cmd="${test_cmd:-$detected_test_cmd}"
 
-  read -rp "Enter your project's linter command [default: ${detected_lint_cmd}]: " lint_cmd
+  read -rp "Enter your project's linter command [default: ${detected_lint_cmd}]: " lint_cmd < /dev/tty
   lint_cmd="${lint_cmd:-$detected_lint_cmd}"
   echo ""
 
