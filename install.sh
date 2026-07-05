@@ -111,6 +111,7 @@ if [[ -c /dev/tty ]]; then
   echo "Where should we store your AI task contracts (definitions of done, scopes, rules)?"
   echo "(If you do not have a second-brain/Obsidian vault, press Enter to create a default folder)"
   read -rp "Folder name [default: .sia]: " input_brain < /dev/tty
+  input_brain="${input_brain%$'\r'}"
   brain_dir="${input_brain:-.sia}"
   tasks_dir="${brain_dir}/tasks"
   wiki_dir="${brain_dir}/wiki"
@@ -122,6 +123,7 @@ if [[ -c /dev/tty ]]; then
   echo "Where should we store worker execution logs, intermediate runs, and escalations?"
   echo "(Recommended: Press Enter to use the default, unless you already have a folder for temporary run logs)"
   read -rp "Folder name [default: .sia-worker]: " input_worker < /dev/tty
+  input_worker="${input_worker%$'\r'}"
   worker_dir="${input_worker:-.sia-worker}"
   runs_dir="${worker_dir}/runs"
   escalations_dir="${worker_dir}/escalations"
@@ -201,16 +203,12 @@ except Exception:
   echo ">> 4. Project Commands"
   read -rp "Enter your project's unit testing command [default: ${detected_test_cmd}]: " test_cmd < /dev/tty
   test_cmd="${test_cmd:-$detected_test_cmd}"
+  test_cmd="${test_cmd%$'\r'}"
 
   read -rp "Enter your project's linter command [default: ${detected_lint_cmd}]: " lint_cmd < /dev/tty
   lint_cmd="${lint_cmd:-$detected_lint_cmd}"
-  echo ""
-
-  # Strip any carriage returns (CRLF / \r) that can come from TTY reads
-  brain_dir="${brain_dir%$'\r'}"
-  worker_dir="${worker_dir%$'\r'}"
-  test_cmd="${test_cmd%$'\r'}"
   lint_cmd="${lint_cmd%$'\r'}"
+  echo ""
 
   # Generate sia.json dynamically with selected providers
   echo "Writing customized sia.json..."
