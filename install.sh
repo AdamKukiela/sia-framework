@@ -30,7 +30,7 @@ prompt_checklist() {
   # Helper to print the list
   print_checklist() {
     echo -e "\033[1m$title\033[0m"
-    echo "  (Use Up/Down arrows to navigate, Space to select/deselect, Enter to confirm)"
+    echo "  (You can select multiple. Use Up/Down arrows to navigate, Space to select/deselect, Enter to confirm and proceed)"
     echo ""
     for ((i=0; i<num_options; i++)); do
       local marker="[ ]"
@@ -51,10 +51,10 @@ prompt_checklist() {
   
   while true; do
     # Read user input (1 char)
-    read -rsn1 key
+    IFS= read -rsn1 key
     if [[ "$key" == $'\x1b' ]]; then
       # Read remaining escape sequence chars with a short timeout to prevent lockups
-      read -rsn2 -t 1 key2
+      IFS= read -rsn2 -t 1 key2
       if [[ "$key2" == "[A" ]]; then # Up arrow
         ((active--))
         [[ $active -lt 0 ]] && active=$((num_options - 1))
