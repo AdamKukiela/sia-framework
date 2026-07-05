@@ -34,6 +34,7 @@ if [[ -c /dev/tty ]]; then
   # Worker runs folder setup
   echo ">> 2. Worker Run logs & Escalations Folder"
   echo "Where should we store worker execution logs, intermediate runs, and escalations?"
+  echo "(Recommended: Press Enter to use the default, unless you already have a folder for temporary run logs)"
   read -rp "Folder name [default: .sia-worker]: " input_worker
   worker_dir="${input_worker:-.sia-worker}"
   runs_dir="${worker_dir}/runs"
