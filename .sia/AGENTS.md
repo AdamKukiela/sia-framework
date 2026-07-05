@@ -21,7 +21,7 @@ This project implements the **Asymmetric Execution (SIA)** framework. Every AI a
 ---
 
 ## 🤖 2. The Worker Role
-**Target Models**: Fast/cheap models (Qwen2.5-Coder, Claude Haiku 4.5, GPT-5.4 mini).
+**Target Models**: Fast/cheap models (Qwen2.5-Coder, Claude Haiku 4.5, GPT-5.4 mini, gemini-2.5-flash).
 **Access Level**: **READ-ONLY** for the task/rule directory (configured as `paths.brain_dir`). Read-Write only for the run logs directory (configured as `paths.runs_dir`) and files listed in the task `Scope`.
 **Responsibilities**:
 - Read the assigned task contract (e.g. `TASK-XXX.md`).

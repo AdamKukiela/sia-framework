@@ -49,7 +49,7 @@ sequenceDiagram
         R->>R: Check wall-clock timeout
         R->>W: Run worker (Inject prior error logs if attempt > 1)
         W->>W: Compile prompt (Truncate reference context if needed)
-        W->>W: Query LLM Provider (Ollama/Anthropic/OpenAI)
+        W->>W: Query LLM Provider (Ollama/Anthropic/OpenAI/Google)
         W->>W: Apply edits to Scope files (Whole-file / Patch Mode)
         W-->>R: Worker returns exit code
         alt Worker exit 0 (Applied successfully)

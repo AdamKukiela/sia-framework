@@ -56,6 +56,11 @@ Configure providers, testing commands, and rules in `sia.json` in your project r
       "provider": "anthropic",
       "model": "claude-5-sonnet",
       "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "gemini-api": {
+      "provider": "google",
+      "model": "gemini-2.5-flash",
+      "api_key_env": "GEMINI_API_KEY"
     }
   },
   "roles": {
