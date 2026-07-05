@@ -1,0 +1,4 @@
+.DS_Store
+.worker/
+.brain/tasks/TASK-*.md
+!.brain/tasks/TASK_TEMPLATE.md

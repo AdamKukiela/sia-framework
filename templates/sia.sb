@@ -1,0 +1,12 @@
+;; SIA macOS Sandbox Profile (sia.sb)
+(version 1)
+(allow default)
+
+;; Deny file write access to system directories to protect host OS
+(deny file-write*
+  (subpath "/System")
+  (subpath "/Library")
+  (subpath "/usr")
+  (subpath "/bin")
+  (subpath "/sbin")
+)

@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "providers": {
+    "local": {
+      "provider": "ollama",
+      "model": "qwen2.5-coder:14b",
+      "base_url": "http://localhost:11434",
+      "num_ctx": 16384,
+      "temperature": 0.2
+    },
+    "claude-api": {
+      "provider": "anthropic",
+      "model": "claude-3-7-sonnet-20250219",
+      "max_tokens": 8192,
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "temperature": 0.2
+    },
+    "openai-api": {
+      "provider": "openai",
+      "model": "gpt-4o",
+      "max_tokens": 4096,
+      "api_key_env": "OPENAI_API_KEY",
+      "temperature": 0.2
+    }
+  },
+  "roles": {
+    "worker": "local",
+    "architect": "claude-api",
+    "review": "claude-api"
+  },
+  "paths": {
+    "brain_dir": ".brain",
+    "tasks_dir": ".brain/tasks",
+    "worker_dir": ".worker",
+    "runs_dir": ".worker/runs",
+    "escalations_dir": ".worker/escalations"
+  },
+  "run": {
+    "max_attempts": 3,
+    "total_timeout_sec": 1800,
+    "command_timeout_sec": 600,
+    "feedback_head_lines": 30,
+    "feedback_tail_lines": 120,
+    "default_mode": "worker"
+  },
+  "sandbox": {
+    "mode": "none",
+    "docker_image": "node:20"
+  },
+  "context": {
+    "repo_map": true,
+    "repo_map_max_files": 400,
+    "budget_pct": 80
+  },
+  "commands": {
+    "test": "npm run test:unit",
+    "lint": "npx eslint --format compact",
+    "format": "npx prettier --write"
+  },
+  "forbidden_patterns": [
+    "as unknown as",
+    "@ts-ignore",
+    "@ts-nocheck",
+    "eslint-disable",
+    "[.]skip[(]",
+    "describe[.]skip",
+    "it[.]skip",
+    "test[.]skip",
+    ": any$",
+    ": any[^a-zA-Z]",
+    "catch[[:space:]]*[{][[:space:]]*[}]"
+  ],
+  "exclude_dirs": [
+    "node_modules",
+    "dist",
+    ".git",
+    ".worker",
+    ".brain"
+  ]
+}
