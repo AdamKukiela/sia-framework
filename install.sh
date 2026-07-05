@@ -49,9 +49,10 @@ if [[ -c /dev/tty ]]; then
   echo ">> 3. Worker Model Provider"
   echo "Which AI provider will your Worker use?"
   echo "  1) Ollama (Local, default: qwen2.5-coder:14b) [Recommended]"
-  echo "  2) Anthropic API (Claude 3.5 Haiku / 3.7 Sonnet)"
-  echo "  3) OpenAI API (GPT-4o-mini / GPT-4o)"
-  read -rp "Choose [1-3, default: 1]: " provider_choice
+  echo "  2) Anthropic API (Claude 5 Sonnet / 5 Haiku)"
+  echo "  3) OpenAI API (GPT-5.5-preview / GPT-5.5-mini)"
+  echo "  4) Antigravity CLI (agy / gemini subscription)"
+  read -rp "Choose [1-4, default: 1]: " provider_choice
   provider_choice="${provider_choice:-1}"
 
   p_provider=""
@@ -61,12 +62,15 @@ if [[ -c /dev/tty ]]; then
 
   if [[ "$provider_choice" == "2" ]]; then
     p_provider="anthropic"
-    p_model="claude-3-5-haiku-20241022"
+    p_model="claude-5-sonnet"
     p_api_env="ANTHROPIC_API_KEY"
   elif [[ "$provider_choice" == "3" ]]; then
     p_provider="openai"
-    p_model="gpt-4o-mini"
+    p_model="gpt-5.5-preview"
     p_api_env="OPENAI_API_KEY"
+  elif [[ "$provider_choice" == "4" ]]; then
+    p_provider="cli"
+    p_model="agy"
   else
     p_provider="ollama"
     p_model="qwen2.5-coder:14b"
@@ -98,7 +102,7 @@ data = {
     },
     "claude-api": {
       "provider": "anthropic",
-      "model": "claude-3-7-sonnet-20250219",
+      "model": "claude-5-sonnet",
       "max_tokens": 8192,
       "api_key_env": "ANTHROPIC_API_KEY",
       "temperature": 0.2

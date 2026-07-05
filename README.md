@@ -54,7 +54,7 @@ Configure providers, testing commands, and rules in `sia.json` in your project r
     },
     "claude-api": {
       "provider": "anthropic",
-      "model": "claude-3-7-sonnet-20250219",
+      "model": "claude-5-sonnet",
       "api_key_env": "ANTHROPIC_API_KEY"
     }
   },
