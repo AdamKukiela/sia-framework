@@ -49,8 +49,8 @@ if [[ -c /dev/tty ]]; then
   echo ">> 3. Worker Model Provider"
   echo "Which AI provider will your Worker use?"
   echo "  1) Ollama (Local, default: qwen2.5-coder:14b) [Recommended]"
-  echo "  2) Anthropic API (Claude 5 Sonnet / 5 Haiku)"
-  echo "  3) OpenAI API (GPT-5.5-preview / GPT-5.5-mini)"
+  echo "  2) Anthropic API (Claude 5 Sonnet / Haiku 4.5)"
+  echo "  3) OpenAI API (GPT-5.5-preview / GPT-5.4 mini)"
   echo "  4) Antigravity CLI (agy / gemini subscription)"
   read -rp "Choose [1-4, default: 1]: " provider_choice
   provider_choice="${provider_choice:-1}"
