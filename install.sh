@@ -51,8 +51,9 @@ if [[ -c /dev/tty ]]; then
   echo "  1) Ollama (Local, default: qwen2.5-coder:14b) [Recommended]"
   echo "  2) Anthropic API (Claude 5 Sonnet / Haiku 4.5)"
   echo "  3) OpenAI API (GPT-5.5-preview / GPT-5.4 mini)"
-  echo "  4) Antigravity CLI (agy / gemini subscription)"
-  read -rp "Choose [1-4, default: 1]: " provider_choice
+  echo "  4) Subscription CLI (claude code / agy / codex / custom)"
+  echo "  5) Google Gemini API (gemini-2.5-flash / gemini-2.5-pro)"
+  read -rp "Choose [1-5, default: 1]: " provider_choice
   provider_choice="${provider_choice:-1}"
 
   p_provider=""
@@ -70,7 +71,11 @@ if [[ -c /dev/tty ]]; then
     p_api_env="OPENAI_API_KEY"
   elif [[ "$provider_choice" == "4" ]]; then
     p_provider="cli"
-    p_model="agy"
+    p_model="claude"
+  elif [[ "$provider_choice" == "5" ]]; then
+    p_provider="google"
+    p_model="gemini-2.5-flash"
+    p_api_env="GEMINI_API_KEY"
   else
     p_provider="ollama"
     p_model="qwen2.5-coder:14b"
@@ -196,6 +201,7 @@ declare -a FILES=(
   ".sia/scripts/lib/providers/ollama.sh"
   ".sia/scripts/lib/providers/anthropic.sh"
   ".sia/scripts/lib/providers/openai.sh"
+  ".sia/scripts/lib/providers/google.sh"
   ".sia/scripts/lib/providers/cli.sh"
   ".sia/scripts/lib/providers/mock.sh"
   ".sia/templates/sia.json"
