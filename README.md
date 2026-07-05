@@ -20,13 +20,14 @@ By isolating worker models, defining strict file-scopes, and running automated g
 .sia/
   tasks/           # TASK-XXX.md contract specifications (Written by Architect)
   wiki/            # rules.md, design decisions, patterns (Architect write-only)
+  AGENTS.md        # System instructions for AI agents
+  scripts/
+    sia-run.sh     # Orchestrator CLI (retry loop, timeout checks, mode routing)
+    sia-worker.sh  # Stateless worker (prompt compiler, provider dispatch, block apply)
+    sia-gate.sh    # Hardened verification gate (scope check, forbidden rules, tests)
 .sia-worker/
   runs/            # Execution attempts logs, feedback buffers
   escalations/     # Critical failure and violation reports
-scripts/
-  sia-run.sh       # Orchestrator CLI (retry loop, timeout checks, mode routing)
-  sia-worker.sh    # Stateless worker (prompt compiler, provider dispatch, block apply)
-  sia-gate.sh      # Hardened verification gate (scope check, forbidden rules, tests)
 ```
 *(Note: Folder paths are fully customizable in `sia.json`)*
 
@@ -99,30 +100,30 @@ If you don't have direct LLM API keys but pay for local subscriptions (e.g., Cla
 
 ### 3. Workflow Modes
 
-Run the orchestrator with `./scripts/sia-run.sh TASK-XXX [flags]`:
+Run the orchestrator with `./.sia/scripts/sia-run.sh TASK-XXX [flags]`:
 
 #### A. Coder (Worker) Mode
 Implement changes using whole-file output blocks:
 ```bash
-./scripts/sia-run.sh TASK-001 --mode worker
+./.sia/scripts/sia-run.sh TASK-001 --mode worker
 ```
 
 #### B. Patch Mode (Default / Recommended)
 Implement changes using SEARCH/REPLACE blocks. Faster and token-efficient:
 ```bash
-./scripts/sia-run.sh TASK-001 --mode patch
+./.sia/scripts/sia-run.sh TASK-001 --mode patch
 ```
 
 #### C. Review Mode
-Read-only review of current code changes against the task description. Outputs a report to `.worker/runs/TASK-XXX/review.md` without modifying files or running gates:
+Read-only review of current code changes against the task description. Outputs a report to the configured runs directory (e.g. `.sia-worker/runs/TASK-XXX/review.md`) without modifying files or running gates:
 ```bash
-./scripts/sia-run.sh TASK-001 --mode review
+./.sia/scripts/sia-run.sh TASK-001 --mode review
 ```
 
 #### D. Architect Mode
-Generates a new task specification file in `.brain/tasks/TASK-XXX.md` using the advanced architect model:
+Generates a new task specification file in your configured tasks directory (e.g. `.sia/tasks/TASK-XXX.md` or `.brain/tasks/TASK-XXX.md`) using the advanced architect model:
 ```bash
-./scripts/sia-run.sh TASK-042 --mode architect
+./.sia/scripts/sia-run.sh TASK-042 --mode architect
 ```
 
 ---
@@ -131,14 +132,14 @@ Generates a new task specification file in `.brain/tasks/TASK-XXX.md` using the 
 Modify `sandbox.mode` in `sia.json`:
 * `"none"`: Executes commands locally.
 * `"docker"`: Executes test/lint commands inside the specified `docker_image` with network disabled (`--network none`) and volume mounts mapped to the current user.
-* `"sandbox-exec"`: Restricts write operations using native macOS security profiles (`templates/sia.sb`).
+* `"sandbox-exec"`: Restricts write operations using native macOS security profiles (`.sia/templates/sia.sb`).
 
 ---
 
 ## 🧪 Running Self-Tests
 Verify your SIA framework installation by running the end-to-end integration test suite:
 ```bash
-./tests/run_tests.sh
+./.sia/tests/run_tests.sh
 ```
 
 ---
