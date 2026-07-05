@@ -206,6 +206,12 @@ except Exception:
   lint_cmd="${lint_cmd:-$detected_lint_cmd}"
   echo ""
 
+  # Strip any carriage returns (CRLF / \r) that can come from TTY reads
+  brain_dir="${brain_dir%$'\r'}"
+  worker_dir="${worker_dir%$'\r'}"
+  test_cmd="${test_cmd%$'\r'}"
+  lint_cmd="${lint_cmd%$'\r'}"
+
   # Generate sia.json dynamically with selected providers
   echo "Writing customized sia.json..."
   python3 -c '
