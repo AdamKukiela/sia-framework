@@ -47,6 +47,14 @@ done
 export SIA_RUN_MODE="${CLI_MODE:-$SIA_RUN_DEFAULT_MODE}"
 MAX_ATTEMPTS="${CLI_MAX_ATTEMPTS:-$SIA_RUN_MAX_ATTEMPTS}"
 
+# Verify task file existence early (fail fast)
+TASK_FILE="$PROJECT_ROOT/${SIA_PATH_TASKS_DIR}/${TASK}.md"
+if [[ "$SIA_RUN_MODE" != "architect" && ! -f "$TASK_FILE" ]]; then
+  sia_err "Task file not found at: $TASK_FILE"
+  sia_err "To create it, copy the template: cp .sia/templates/TASK_TEMPLATE.md $TASK_FILE"
+  exit 1
+fi
+
 # Check for review/architect modes (they don't run retry loops or gates)
 if [[ "$SIA_RUN_MODE" == "review" || "$SIA_RUN_MODE" == "architect" ]]; then
   sia_log "Running role-based utility command in mode '$SIA_RUN_MODE'..."
