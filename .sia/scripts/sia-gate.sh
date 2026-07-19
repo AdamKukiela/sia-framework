@@ -19,6 +19,13 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 # Inicjalizacja konfiguracji
 sia_load_config
+
+# Zweryfikuj czy jesteśmy w repozytorium Git
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  sia_err "SIA requires a valid Git repository to function safely! Run 'git init' first."
+  exit 3
+fi
+
 # Get active provider settings for the worker role
 sia_get_role_provider_env "worker"
 
@@ -182,7 +189,7 @@ run_gate_cmd() {
     --timeout "$SIA_RUN_COMMAND_TIMEOUT_SEC" \
     --sandbox "$SIA_SANDBOX_MODE" \
     --docker-image "$SIA_SANDBOX_DOCKER_IMAGE" \
-    -- $cmd
+    -- "$cmd"
 }
 
 if [[ -n "${SIA_CMD_TEST:-}" ]]; then

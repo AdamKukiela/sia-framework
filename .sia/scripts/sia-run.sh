@@ -17,6 +17,12 @@ source "$SCRIPT_DIR/lib/common.sh"
 # Inicjalizacja konfiguracji
 sia_load_config
 
+# Zweryfikuj czy jesteśmy w repozytorium Git
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  sia_err "SIA requires a valid Git repository to function safely! Run 'git init' first."
+  exit 3
+fi
+
 if [[ -z "$TASK" ]]; then
   echo "Usage: ./scripts/sia-run.sh TASK-XXX [--mode worker|patch|review|architect] [--max-attempts N]" >&2
   exit 2

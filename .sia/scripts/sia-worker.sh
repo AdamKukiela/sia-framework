@@ -131,11 +131,28 @@ else
   # Default whole-file mode (legacy)
   is_in_scope() {
     local file="$1"
+    # Resolve relative path to absolute to avoid traversal (e.g., src/../../etc/passwd)
+    local abs_file
+    abs_file=$(python3 -c "import os; print(os.path.realpath('$file'))" 2>/dev/null)
+    local abs_root
+    abs_root=$(python3 -c "import os; print(os.path.realpath('$PROJECT_ROOT'))" 2>/dev/null)
+
+    # Prevent traversal outside project root
+    if [[ "$abs_file" != "$abs_root"/* ]]; then
+      return 1
+    fi
+
     for scope_path in "${SCOPE_PATHS[@]}"; do
+      local abs_scope
+      abs_scope=$(python3 -c "import os; print(os.path.realpath(os.path.join('$PROJECT_ROOT', '$scope_path')))" 2>/dev/null)
       if [[ "$scope_path" == */ ]]; then
-        [[ "$file" == "$scope_path"* ]] && return 0
+        if [[ "$abs_file" == "$abs_scope"/* || "$abs_file" == "$abs_scope" ]]; then
+          return 0
+        fi
       else
-        [[ "$file" == "$scope_path" ]] && return 0
+        if [[ "$abs_file" == "$abs_scope" ]]; then
+          return 0
+        fi
       fi
     done
     return 1
